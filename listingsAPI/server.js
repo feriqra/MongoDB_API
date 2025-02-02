@@ -14,13 +14,10 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-
 const ListingsDB = require("./modules/listingsDB.js");
 const db = new ListingsDB();
 
 const app = express();
-const HTTP_PORT = process.env.PORT || 3000;
-
 app.use(cors());
 app.use(express.json());
 
@@ -29,7 +26,7 @@ app.get("/", (req, res) => {
   res.json({ message: "API Listening" });
 });
 
-// API routes after initializing APP
+// API routes
 app.post("/api/listings", async (req, res) => {
   try {
     const listing = await db.addListing(req.body);
@@ -76,13 +73,22 @@ app.delete("/api/listings/:id", async (req, res) => {
   }
 });
 
-// Initialize DB and Start Server
+// Initialize DB before handling requests
 db.initialize(process.env.MONGODB_CONN_STRING)
   .then(() => {
-    app.listen(HTTP_PORT, () => {
-      console.log(`Server listening on: ${HTTP_PORT}`);
-    });
+    console.log("Database initialized successfully");
+
+    // Local server setup (Only if running locally)
+    if (process.env.NODE_ENV !== "production") {
+      const HTTP_PORT = process.env.PORT || 3000;
+      app.listen(HTTP_PORT, () => {
+        console.log(`Server running locally at http://localhost:${HTTP_PORT}`);
+      });
+    }
   })
   .catch((err) => {
-    console.log(err);
+    console.error("Database initialization failed:", err);
   });
+
+// Export app for Vercel deployment
+module.exports = app;

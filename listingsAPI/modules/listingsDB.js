@@ -1,3 +1,44 @@
+// const mongoose = require("mongoose");
+// const Listing = require("./listingSchema");
+
+// class ListingsDB {
+//   constructor() {
+//     this.connection = null;
+//   }
+
+//   async initialize(dbURL) {
+//     if (this.connection) return;
+//     this.connection = await mongoose.connect(dbURL);
+//     console.log("Connected to MongoDB");
+//   }
+
+//   async addListing(data) {
+//     const newListing = new Listing(data);
+//     return await newListing.save();
+//   }
+
+//   async getListings(page, perPage, name) {
+//     const filter = name ? { name: new RegExp(name, "i") } : {};
+//     return await Listing.find(filter)
+//       .limit(perPage)
+//       .skip((page - 1) * perPage);
+//   }
+
+//   async getListingById(id) {
+//     return await Listing.findById(id);
+//   }
+
+//   async updateListing(id, data) {
+//     return await Listing.findByIdAndUpdate(id, data, { new: true });
+//   }
+
+//   async deleteListing(id) {
+//     return await Listing.findByIdAndDelete(id);
+//   }
+// }
+
+// module.exports = ListingsDB;
+
 const mongoose = require("mongoose");
 const Listing = require("./listingSchema");
 
@@ -7,33 +48,65 @@ class ListingsDB {
   }
 
   async initialize(dbURL) {
-    if (this.connection) return;
-    this.connection = await mongoose.connect(dbURL);
-    console.log("Connected to MongoDB");
+    if (this.connection) {
+      console.log("Already connected to MongoDB.");
+      return;
+    }
+
+    try {
+      this.connection = await mongoose.connect(dbURL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      });
+      console.log("Connected to MongoDB");
+    } catch (err) {
+      console.error("MongoDB connection error:", err);
+      throw new Error("Failed to connect to MongoDB.");
+    }
   }
 
   async addListing(data) {
-    const newListing = new Listing(data);
-    return await newListing.save();
+    try {
+      const newListing = new Listing(data);
+      return await newListing.save();
+    } catch (err) {
+      throw new Error("Error adding listing: " + err.message);
+    }
   }
 
-  async getListings(page, perPage, name) {
-    const filter = name ? { name: new RegExp(name, "i") } : {};
-    return await Listing.find(filter)
-      .limit(perPage)
-      .skip((page - 1) * perPage);
+  async getListings(page = 1, perPage = 10, name) {
+    try {
+      const filter = name ? { name: new RegExp(name, "i") } : {};
+      return await Listing.find(filter)
+        .limit(perPage)
+        .skip((page - 1) * perPage);
+    } catch (err) {
+      throw new Error("Error fetching listings: " + err.message);
+    }
   }
 
   async getListingById(id) {
-    return await Listing.findById(id);
+    try {
+      return await Listing.findById(id);
+    } catch (err) {
+      throw new Error("Error fetching listing by ID: " + err.message);
+    }
   }
 
   async updateListing(id, data) {
-    return await Listing.findByIdAndUpdate(id, data, { new: true });
+    try {
+      return await Listing.findByIdAndUpdate(id, data, { new: true });
+    } catch (err) {
+      throw new Error("Error updating listing: " + err.message);
+    }
   }
 
   async deleteListing(id) {
-    return await Listing.findByIdAndDelete(id);
+    try {
+      return await Listing.findByIdAndDelete(id);
+    } catch (err) {
+      throw new Error("Error deleting listing: " + err.message);
+    }
   }
 }
 
