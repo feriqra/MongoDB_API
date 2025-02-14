@@ -1,49 +1,72 @@
 const mongoose = require("mongoose");
 const Listing = require("./listingSchema");
 
-let connection = null;
-
-const initialize = async (connectionString) => {
-  try {
-    connection = await mongoose.connect(connectionString);
-    console.log("Connected to MongoDB");
-  } catch (err) {
-    console.error("Failed to connect to MongoDB", err);
-    throw err;
+class ListingsDB {
+  constructor() {
+    this.connection = null;
   }
-};
 
-const addNewListing = async (data) => {
-  const newListing = new Listing(data);
-  await newListing.save();
-  return newListing;
-};
+  async initialize(dbURL) {
+    if (this.connection) {
+      console.log("Already connected to MongoDB.");
+      return;
+    }
 
-const getAllListings = async (page, perPage, name) => {
-  const query = name ? { name: new RegExp(name, "i") } : {};
-  return await Listing.find(query)
-    .skip((page - 1) * perPage)
-    .limit(perPage)
-    .exec();
-};
+    try {
+      this.connection = await mongoose.connect(dbURL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      });
+      console.log("Connected to MongoDB");
+    } catch (err) {
+      console.error("MongoDB connection error:", err);
+      throw new Error("Failed to connect to MongoDB.");
+    }
+  }
 
-const getListingById = async (id) => {
-  return await Listing.findById(id).exec();
-};
+  async addListing(data) {
+    try {
+      const newListing = new Listing(data);
+      return await newListing.save();
+    } catch (err) {
+      throw new Error("Error adding listing: " + err.message);
+    }
+  }
 
-const updateListingById = async (id, data) => {
-  return await Listing.findByIdAndUpdate(id, data, { new: true }).exec();
-};
+  async getListings(page = 1, perPage = 10, name) {
+    try {
+      const filter = name ? { name: new RegExp(name, "i") } : {};
+      return await Listing.find(filter)
+        .limit(perPage)
+        .skip((page - 1) * perPage);
+    } catch (err) {
+      throw new Error("Error fetching listings: " + err.message);
+    }
+  }
 
-const deleteListingById = async (id) => {
-  return await Listing.findByIdAndDelete(id).exec();
-};
+  async getListingById(id) {
+    try {
+      return await Listing.findById(id);
+    } catch (err) {
+      throw new Error("Error fetching listing by ID: " + err.message);
+    }
+  }
 
-module.exports = {
-  initialize,
-  addNewListing,
-  getAllListings,
-  getListingById,
-  updateListingById,
-  deleteListingById,
-};
+  async updateListing(id, data) {
+    try {
+      return await Listing.findByIdAndUpdate(id, data, { new: true });
+    } catch (err) {
+      throw new Error("Error updating listing: " + err.message);
+    }
+  }
+
+  async deleteListing(id) {
+    try {
+      return await Listing.findByIdAndDelete(id);
+    } catch (err) {
+      throw new Error("Error deleting listing: " + err.message);
+    }
+  }
+}
+
+module.exports = ListingsDB;
