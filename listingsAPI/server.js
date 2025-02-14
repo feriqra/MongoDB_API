@@ -143,13 +143,11 @@ const initializeServer = async () => {
     await db.initialize(process.env.MONGODB_CONN_STRING);
     console.log("Database connected successfully");
 
-    if (process.env.NODE_ENV !== "production") {
-      const PORT = process.env.PORT || 3000;
-      app.listen(PORT, () => {
-        console.log(`Server running on http://localhost:${PORT}`);
-        console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
-      });
-    }
+    // Remove the environment check to start the server unconditionally
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
   } catch (err) {
     console.error("Server initialization failed:", err.message);
     process.exit(1);
