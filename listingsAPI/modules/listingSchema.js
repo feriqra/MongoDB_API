@@ -11,6 +11,10 @@ const listingSchema = new mongoose.Schema({
   bed_type: String,
   beds: Number,
   picture_url: String,
+  host: {
+    host_name: String,
+    host_location: String,
+  },
 });
 
 module.exports = mongoose.model("Listing", listingSchema);
