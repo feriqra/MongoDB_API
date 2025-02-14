@@ -5,10 +5,7 @@ let connection = null;
 
 const initialize = async (connectionString) => {
   try {
-    connection = await mongoose.connect(connectionString, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    connection = await mongoose.connect(connectionString);
     console.log("Connected to MongoDB");
   } catch (err) {
     console.error("Failed to connect to MongoDB", err);

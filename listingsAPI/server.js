@@ -4,7 +4,7 @@ const cors = require("cors");
 const db = require("./modules/listingsDB");
 
 const app = express();
-const HTTP_PORT = process.env.PORT || 8080;
+const HTTP_PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -74,13 +74,18 @@ app.delete("/api/listings/:id", async (req, res) => {
   }
 });
 
-// Initialize database and start server
-db.initialize(process.env.MONGODB_CONN_STRING)
-  .then(() => {
-    app.listen(HTTP_PORT, () => {
-      console.log(`Server listening on: ${HTTP_PORT}`);
+// Initialize database and start server (for local development)
+if (process.env.NODE_ENV !== "production") {
+  db.initialize(process.env.MONGODB_CONN_STRING)
+    .then(() => {
+      app.listen(HTTP_PORT, () => {
+        console.log(`Server listening on: ${HTTP_PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.log(err);
     });
-  })
-  .catch((err) => {
-    console.log(err);
-  });
+}
+
+// Export the app for Vercel
+module.exports = app;
