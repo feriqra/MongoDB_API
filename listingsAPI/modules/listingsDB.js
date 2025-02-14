@@ -3,20 +3,19 @@ const Listing = require("./listingSchema");
 
 class ListingsDB {
   constructor() {
+    // Use mongoose's connection state instead of custom property
     this.connection = null;
   }
 
   async initialize(dbURL) {
-    if (this.connection) {
+    if (mongoose.connection.readyState === 1) {
       console.log("Already connected to MongoDB.");
       return;
     }
 
     try {
-      this.connection = await mongoose.connect(dbURL, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
+      // Remove deprecated options (useNewUrlParser and useUnifiedTopology)
+      this.connection = await mongoose.connect(dbURL);
       console.log("Connected to MongoDB");
     } catch (err) {
       console.error("MongoDB connection error:", err);
@@ -29,7 +28,7 @@ class ListingsDB {
       const newListing = new Listing(data);
       return await newListing.save();
     } catch (err) {
-      throw new Error("Error adding listing: " + err.message);
+      throw new Error(`Error adding listing: ${err.message}`);
     }
   }
 
@@ -37,10 +36,11 @@ class ListingsDB {
     try {
       const filter = name ? { name: new RegExp(name, "i") } : {};
       return await Listing.find(filter)
+        .sort({ _id: 1 }) // Add sorting for consistent pagination
         .limit(perPage)
         .skip((page - 1) * perPage);
     } catch (err) {
-      throw new Error("Error fetching listings: " + err.message);
+      throw new Error(`Error fetching listings: ${err.message}`);
     }
   }
 
@@ -48,15 +48,18 @@ class ListingsDB {
     try {
       return await Listing.findById(id);
     } catch (err) {
-      throw new Error("Error fetching listing by ID: " + err.message);
+      throw new Error(`Error fetching listing by ID: ${err.message}`);
     }
   }
 
   async updateListing(id, data) {
     try {
-      return await Listing.findByIdAndUpdate(id, data, { new: true });
+      return await Listing.findByIdAndUpdate(id, data, {
+        new: true,
+        runValidators: true, // Add validation on update
+      });
     } catch (err) {
-      throw new Error("Error updating listing: " + err.message);
+      throw new Error(`Error updating listing: ${err.message}`);
     }
   }
 
@@ -64,7 +67,7 @@ class ListingsDB {
     try {
       return await Listing.findByIdAndDelete(id);
     } catch (err) {
-      throw new Error("Error deleting listing: " + err.message);
+      throw new Error(`Error deleting listing: ${err.message}`);
     }
   }
 }
