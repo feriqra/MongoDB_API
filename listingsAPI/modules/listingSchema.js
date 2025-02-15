@@ -13,4 +13,9 @@ const listingSchema = new mongoose.Schema({
   picture_url: String,
 });
 
+// Indexes
+listingSchema.index({ name: 1 }); // Index on name
+listingSchema.index({ location: 1 }); // Index on location (optional)
+listingSchema.index({ price: 1 }); // Index on price (optional)
+
 module.exports = mongoose.model("Listing", listingSchema);

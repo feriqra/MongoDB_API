@@ -3,7 +3,12 @@ const Listing = require("./listingSchema");
 
 class ListingsDB {
   constructor() {
-    this.connection = null;
+    // Use Mongoose's built-in connection state instead of custom tracking
+    if (mongoose.connection.readyState === 1) {
+      this.connection = mongoose.connection;
+    } else {
+      this.connection = null;
+    }
   }
 
   async initialize(dbURL) {
@@ -14,10 +19,12 @@ class ListingsDB {
 
     try {
       this.connection = await mongoose.connect(dbURL, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 3000, // Fail after 3 seconds if no connection
       });
       console.log("Connected to MongoDB");
+
+      // Create indexes once during initialization
+      await Listing.createIndexes();
     } catch (err) {
       console.error("MongoDB connection error:", err);
       throw new Error("Failed to connect to MongoDB.");
